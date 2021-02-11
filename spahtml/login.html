@@ -1,0 +1,117 @@
+<html>
+    <head>
+        <title>oauth login</title>
+        <script language="javascript">
+
+          console.log("login SPA page loaded! window.location.search: " + window.location.search);
+          const urlParams = new URLSearchParams(window.location.search);
+          //const clientId = 'client1'
+          const clientId = urlParams.get('client_id');
+          console.log("clientId: '" + clientId + "'");
+          
+          //const scopes = 'profile:read'
+          const scopes = urlParams.get('scope');
+          console.log("scope: '" + scopes + "'");
+          //const state = 'somestate'
+          const state = urlParams.get('state');
+          console.log("state: " + state);
+          //const redirectUri = 'http://localhost:8080/login/oauth2/code/sso'
+          const redirectUri = urlParams.get('redirect_uri');
+          console.log("redirectUri: " + redirectUri);
+          
+          //const authoriseUri = 'http://localhost:8090/idp/authorize'
+          //const authoriseUri = 'http://localhost:8080/idp/authorize';
+          const authoriseUri = 'http://restapi.localhost:8090/idp/authorize';
+          
+          
+          function plyObserver(xhr, url) {
+          
+            xhr.withCredentials = true;
+            
+            
+            xhr.setRequestHeader("channel-uniqueName", "normal");
+
+            xhr.onreadystatechange = function() { // Call a function when the state changes.
+                if (this.readyState === XMLHttpRequest.DONE) {
+                    if (this.status === 200) {
+                        // Request finished. Do processing here.
+                        
+                        var jsonResponse = JSON.parse(xhr.responseText);
+                        
+                        console.log(jsonResponse);
+                        
+                        var authoriseOperation = authoriseUri + '?response_type=code&client_id=' + clientId + '&scope=' + scopes + '&state=' + state + '&redirect_uri='+ redirectUri + '&Authorization=' + jsonResponse.authKey
+                        
+                        
+                        console.log("login success, about to redirect browser to '" + authoriseOperation + "'...");
+                        window.alert("login success, about to redirect browser to '" + authoriseOperation + "'...");
+                        
+                        console.log("request to url'" + url + "' returned 200! Redirecting to authoriseOperation: " + authoriseOperation);
+                        document.location = authoriseOperation
+                    } else {
+                        console.error("server returned " + this.status + ": ", this);
+                    }
+                }
+            }
+          }
+          
+          function sendxhrSP() {
+            var xhr = new XMLHttpRequest();
+            var url = 'http://restapi.localhost:8090/api/v1/user/login';
+            xhr.open("POST", url, true);
+
+            //Send the proper header information along with the request
+            //xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            
+            var user=document.getElementById("username").value;
+            var pass=document.getElementById("password").value;
+            
+            plyObserver(xhr, url)
+            
+            var data = '{"email":"' + user + '","password":"' + pass + '"}'
+            console.log('sending POST to "' + url + '" with data: "' + data + '"...');
+            
+            xhr.send(data);
+          }
+          function sendxhrLocal() {
+            var xhr = new XMLHttpRequest();
+          
+            var url = 'http://localhost:8081/login'
+            xhr.open("POST", url, true);
+
+            //Send the proper header information along with the request
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            //xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            
+            //var user=document.getElementById("username").value;
+            //var pass=document.getElementById("password").value;
+            
+            plyObserver(xhr, url)
+            
+            //var formData = new FormData( document.getElementById("f") );
+            //xhr.send(formData);
+            var data = 'username=user&password=password';
+            console.log('sending POST to "' + url + '" with data: "' + data + '"...');
+            xhr.send(data);
+          }
+          
+          
+          function submitty() {
+            
+            sendxhrSP()
+            //sendxhrLocal();
+            
+          }
+        </script>
+    </head>
+    <body>
+        Login here:
+        <form id='f' action="#">
+            email: <input id="username" name="email" value="testuser@example.com" ><br/>
+            pass: <input id="password" name="password" value="testpassword123" ><br/>
+            <button onClick="javascript:submitty();return false;">Go</button>
+        </form>
+    </body>
+</html>

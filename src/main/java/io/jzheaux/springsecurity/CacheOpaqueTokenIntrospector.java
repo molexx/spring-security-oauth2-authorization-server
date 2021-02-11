@@ -8,10 +8,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenIntrospectionSuccessResponse;
 import com.nimbusds.oauth2.sdk.id.Audience;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.Cache;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,6 +23,7 @@ import org.springframework.security.oauth2.server.resource.introspection.OAuth2I
 import org.springframework.security.oauth2.server.resource.introspection.OpaqueTokenIntrospector;
 import org.springframework.stereotype.Component;
 
+import static io.jzheaux.springsecurity.OAuth2AuthorizationServerController.deserialiseTokenIntrospectionSuccessResponse;
 import static org.springframework.security.oauth2.server.resource.introspection.OAuth2IntrospectionClaimNames.AUDIENCE;
 import static org.springframework.security.oauth2.server.resource.introspection.OAuth2IntrospectionClaimNames.CLIENT_ID;
 import static org.springframework.security.oauth2.server.resource.introspection.OAuth2IntrospectionClaimNames.EXPIRES_AT;
@@ -30,6 +33,7 @@ import static org.springframework.security.oauth2.server.resource.introspection.
 import static org.springframework.security.oauth2.server.resource.introspection.OAuth2IntrospectionClaimNames.SCOPE;
 
 @Component
+@ConditionalOnProperty(prefix = "io.zheaux.springsecurity", name = {"enabled"}, havingValue = "true")
 public class CacheOpaqueTokenIntrospector implements OpaqueTokenIntrospector {
 
 	@Autowired
@@ -37,8 +41,13 @@ public class CacheOpaqueTokenIntrospector implements OpaqueTokenIntrospector {
 
 	@Override
 	public OAuth2AuthenticatedPrincipal introspect(String s) {
-		TokenIntrospectionSuccessResponse details =
-				this.accessTokenCache.get(s, TokenIntrospectionSuccessResponse.class);
+		//TokenIntrospectionSuccessResponse details =	this.accessTokenCache.get(s, TokenIntrospectionSuccessResponse.class);
+		TokenIntrospectionSuccessResponse details = null;
+		try {
+			details = deserialiseTokenIntrospectionSuccessResponse(this.accessTokenCache.get(s, String.class));
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 		if (details == null) {
 			throw new OAuth2IntrospectionException("Could not find active access token");
 		}

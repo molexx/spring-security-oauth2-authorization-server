@@ -1,0 +1,6 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+io.jzheaux.springsecurity.OAuth2AuthorizationServerController,\
+io.jzheaux.springsecurity.CacheOpaqueTokenIntrospector,\
+io.jzheaux.springsecurity.config.ClientEndpoints,\
+io.jzheaux.springsecurity.config.OAuthServerSecurityConfig,\
+io.jzheaux.springsecurity.config.WebConfig
